@@ -6,27 +6,16 @@
 # Import libraries
 import requests
 import urllib.request
-import time
-#import mysql.connector #MySQL
+import time 
+import xlwt #python3 -m pip install xlwt
+from xlwt import Workbook 
 from bs4 import BeautifulSoup
-"""
-#MySQL Init
-config = {
-  'user': 'faisalhossain',
-  'password': 'F@1sal75',
-  'host': 'localhost',
-  'database': 'TestDB',
-  'raise_on_warnings': True
-}
 
-cnx = mysql.connector.connect(**config)
-
-cursor = cnx.cursor()
-cursor.execute('SELECT * FROM TestDB.dbo.Person')
- 
-for row in cursor:
-    print(column)
-"""
+# Workbook is created 
+wb = Workbook() 
+  
+# add_sheet is used to create sheet. 
+sheet1 = wb.add_sheet('Sheet 1') 
 
 # Set the URL you want to webscrape from
 url = 'https://osas.franklin.uga.edu/franklin-college-degree-requirements'
@@ -43,10 +32,15 @@ start = soup.find('article') #find first html <article>
 start1 = start.find('ul') # find start of bulleted listed in article
 
 degreeReq = {} #{College Requirement:[Link, Requirements....],}
+counter = 0
 for a in start1.find_all('a'):
+    counter += 1
     degreeReq[a.string] = ['https://osas.franklin.uga.edu/' + a.get('href')]
+    sheet1.write(counter, 0, a.string)
 
-del degreeReq['Foreign Language Requirement\xa0'] 
+del degreeReq['Foreign Language Requirement\xa0'] #ERROR-Handling 
+del degreeReq['History Requirement'] #ERROR-Handling 
+
 for k,v in degreeReq.items():
     print (k)
     print (v)
@@ -54,22 +48,27 @@ for k,v in degreeReq.items():
 
 # College Degree Requirements Sub
 print('sub start')
+counter1 = 0
+counter2 = 0
 for k, v in degreeReq.items():
     url = v[0]
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     start = soup.find('tbody') #find first html <tbody>
+    print()
+    print("[||||||||||]" + k)
+    counter1 += 1
+    for a in start.find_all('a'): #Course
+        counter2 += 1
+        sheet1.write(counter1, counter2, a.string)
 
-    for h3 in start.find_all('h3'):
-        print(h3.string)
-        print("Course Codes:")
-        for a in start.find_all('a'):
-            print(a.string)
-            if start.find('h3'):
-                break
+wb.save('xlwt example.xls')
 
-    print("[][] END [][]")
-    
+
+
+
+# MISCELLANEOUS
+
 """ WORKS 
     print("Course Headings:")
     for h3 in start.find_all('h3'):
@@ -79,17 +78,10 @@ for k, v in degreeReq.items():
     for a in start.find_all('a'):
        print(a.string)
     print("[][] END [][]")
-"""   
+"""
+
     #a = soup.select_one('tbody a')
     #print(a)
-
-
-print("[] After ------------")
-for k,v in degreeReq.items():
-    print (k)
-    print (v)
-    print()
-
 
 #for x in degreeReq:
 #    print (x)
@@ -97,18 +89,8 @@ for k,v in degreeReq.items():
 ##        print (y,':',cars[x][y])
 
 
-cursor.execute('''
-                INSERT INTO TestDB.dbo.Person (Name, Age, City)
-                VALUES
-                ('Bob',55,'Montreal'),
-                ('Jenny',66,'Boston')
-                ''')
-conn.commit()
-
-
 """
 Useful links:
 https://stackoverflow.com/questions/44290485/beautiful-soup-error-nonetype-object-and-if?rq=1
 https://stackoverflow.com/questions/4362981/beautifulsoup-how-do-i-extract-all-the-lis-from-a-list-of-uls-that-contains
 """
-cnx.close()
